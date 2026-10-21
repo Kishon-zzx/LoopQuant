@@ -123,8 +123,6 @@ class LoopQuantPipeline:
         cldc_summary = self.run_cldc(model, calibration_data)
         ilpa_summary = self.run_ilpa(model, calibration_data)
         allocation = list(ilpa_summary["allocation"])
-        QUANTIZATION_CONTEXT.set_allocation(allocation)
-        QUANTIZATION_CONTEXT.enabled = True
         if teacher_model is None:
             model_path = getattr(model, "_loopquant_model_path", None)
             if model_path is None:
@@ -135,6 +133,9 @@ class LoopQuantPipeline:
                 device=self.device,
                 num_loops=int(self.config.num_loops),
             )
+        # load_looped_transformer() resets QUANTIZATION_CONTEXT to all-4; apply ILPA's allocation after it.
+        QUANTIZATION_CONTEXT.set_allocation(allocation)
+        QUANTIZATION_CONTEXT.enabled = True
         lctc_summary = self.run_lctc(
             model, teacher_model, calibration_data, allocation
         )
